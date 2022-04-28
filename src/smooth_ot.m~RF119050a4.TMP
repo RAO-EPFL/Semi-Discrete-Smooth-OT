@@ -24,7 +24,7 @@ for r = 1 : run_count
     prm.cont_samples = cont_samples; % Number of samples for continuous distribution
     prm.N = N; % Number of discrete samples
     prm.K_agd = K_agd; % number of iterations for accelerated gradient descent
-    prm.epochs_sgd_opt = epochs_sgd_opt; % number of iterations for sgd to approximate optimal solution
+    prm.K_sgd_opt = K_sgd_opt; % number of iterations for sgd to approximate optimal solution
     prm.p = p; % type of the Wasserstein distance
     prm.dist_type = dist_type; % norm type to define the cost of the Wasserstein distance
     prm.lambda = lambda; % parameter of generating function F
@@ -35,7 +35,6 @@ for r = 1 : run_count
     prm.mu = ones(prm.cont_samples, 1) / prm.cont_samples; % discretized continuous distribution
     prm.eta = ones(prm.N, 1) / prm.N;
     prm.method = method;
-    prm.eps_bar = 0.01;
     if method == "chi2"
         prm.cons = cons_tikhonov;
         lr = prm.lambda;
@@ -48,25 +47,9 @@ for r = 1 : run_count
         prm.cons = cons_hyperbolic;
         lr = prm.lambda; 
         prm.obj_star = 0;
-        [obj_long_sgd, phi_long_sgd] = sgd2(prm, epochs_sgd_opt); % before this was acc
+        [obj_long_sgd, phi_long_sgd] = sgd(prm); % before this was acc
         phi_star = phi_long_sgd(:, end);
-        %%%%% Smallest eigenvalue of the hessian
-        prm.eps_ = 1 / 2 / sqrt(10000);
-        p_bisect_star = bisection_parallel(phi_star, prm.C_X_Y, prm);
-        k = sqrt(2) - 1 - asinh(1);
-        F_inv = @(s) - (asinh(N * (1-s))+ k) .* prm.lambda;
-        F_der = @(s) cosh(s ./ prm.lambda - k) ./ prm.lambda / N; 
-        eig_vals = F_der(F_inv(1 - p_bisect_star));
-        min(min(eig_vals))
-        
-        obj_star = obj_long_sgd(end);
-    elseif method == "entropic2"
-        prm.cons = cons_hyperbolic;
-        lr = prm.lambda; 
-        prm.obj_star = 0;
-        [obj_long_sgd, phi_long_sgd] = sgd2(prm, epochs_sgd_opt); % before this was acc
-        phi_star = phi_long_sgd(:, end);
-        obj_star = obj_long_sgd(end);
+        obj_star = obj_long_sgd(:, end);
     elseif method == "non-reg"
         prm.cons = cons_non;
         % Define variables
@@ -88,9 +71,9 @@ for r = 1 : run_count
     end
     prm.obj_star = obj_star;
     prm.phi_star = phi_star;
-    if method == "hyperbolic" || method == "entropic2"
-        sub_opt_local = obj_long_sgd(1:length(ind)) - obj_star;
-        phi_save_local = phi_long_sgd(:, 1:length(ind));
+    if method == "hyperbolic"
+        sub_opt_local = obj_long_sgd(1:length(ind)) + obj_star;
+        phi_save_local = phi_long_sgd(1:length(ind));
         sub_opt(:, r) = sub_opt_local;
         phi_save(:, r) = vecnorm(phi_save_local - prm.phi_star, 2, 1) .^ 2;
     else

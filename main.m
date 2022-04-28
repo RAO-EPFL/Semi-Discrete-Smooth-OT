@@ -12,7 +12,7 @@ clear
 rng('default') % seed
 addpath('./src')
 
-regularization_methods = ["entropic", "chi2", "non-reg"]; % regularization methods for optimal transport
+regularization_methods = ["entropic", "chi2", "hyperbolic", "non-reg"]; % regularization methods for optimal transport
 for m = 1 : length(regularization_methods)
     method = regularization_methods(m);
     run smooth_ot.m

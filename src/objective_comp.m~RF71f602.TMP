@@ -8,7 +8,6 @@ function obj_val = objective_comp(phi_gd, C_X_Y, param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 k = sqrt(2) - 1 - asinh(1);
 f_hyperbolic = @(s) param.lambda * (s .* asinh(s) - sqrt(s.^2 +1) + 1 + k .* s);
-f_entropic = @(s) param.lambda .* s .* log(s);
     if param.method == "chi2"
         r_X_Y = (phi_gd - C_X_Y') / param.lambda;
         r_max = max(r_X_Y, [], 1);
@@ -25,14 +24,10 @@ f_entropic = @(s) param.lambda .* s .* log(s);
         lse = param.lambda * r_max + param.lambda * ...
             log(sum(1/param.N * exp(r_X_Y), 1));
         obj_val = param.nu' * phi_gd - mean(lse); 
-    elseif param.method == "entropic2"
-        p_bisect = bisection_parallel(phi_gd, C_X_Y, param);
-        obj_val = param.nu' * phi_gd - mean(sum((phi_gd' - C_X_Y) .* ...
-            p_bisect', 2)' - sum(1/param.N * f_entropic(param.N * p_bisect)));
     elseif param.method == "hyperbolic"
         p_bisect = bisection_parallel(phi_gd, C_X_Y, param);
         obj_val = sum(param.nu .* phi_gd) - mean(sum((phi_gd' - C_X_Y) .* ...
-            p_bisect', 2)' - sum(1/param.N * f_hyperbolic(param.N * p_bisect)));
+            p_bisect', 2)' + sum(1/param.N * f_hyperbolic(param.N * p_bisect)));
     elseif param.method == "non-reg"
         r_int = phi_gd - C_X_Y';
         r_max = max(r_int, [], 1);

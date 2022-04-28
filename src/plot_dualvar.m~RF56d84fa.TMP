@@ -46,9 +46,6 @@ lgd = legend([p_non, p_ent, p_tik, p_hyp], 'No regularization', ...
 'Entropic regularization','$\chi^2$-divergence regularization', ...
 'Hyperbolic regularization', 'Location', 'southwest', 'interpreter','latex');
 lgd.FontSize = 16;
-ylim([1e-6, 1])
-xticks(logspace(0,5, 6))
-yticks(logspace(-6, 1, 8))
 remove_border()
 saveas(gcf, 'dualvars', 'svg')
 % saveas(gcf, 'convergence', 'png')
